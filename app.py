@@ -40,7 +40,7 @@ def excelHelper(ans):
     workbook.close()
 
 
-API_KEY='AIzaSyAlpfD6cVvXtir_uHRltqMe8sB9U7-JuXA'
+API_KEY='YOUR_API_KEY'
 
 youtube=build('youtube','v3',developerKey=API_KEY)
 
