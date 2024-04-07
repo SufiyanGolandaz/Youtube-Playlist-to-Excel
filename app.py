@@ -1,14 +1,10 @@
 from  googleapiclient.discovery import build
 import xlsxwriter
 import json
-from flask import Flask
-
-app = Flask(__name__) 
 
 def excelHelper(ans):
     
     no_of_rows=len(ans)
-    
     workbook = xlsxwriter.Workbook('output.xlsx')   
     worksheet = workbook.add_worksheet('Titles')
     worksheet.write(0, 0, 'Sr No')
@@ -41,47 +37,69 @@ def excelHelper(ans):
 
 
 API_KEY='YOUR_API_KEY'
-
 youtube=build('youtube','v3',developerKey=API_KEY)
+
+#Add the playlist that you want to search for
+playlist_id='PLgUwDviBIf0q8Hkd7bK2Bpryj2xVJk8Vk'
 
 request=youtube.playlistItems().list(
     part="snippet,contentDetails",
-    playlistId='PLgUwDviBIf0q8Hkd7bK2Bpryj2xVJk8Vk',
+    playlistId=playlist_id,
     maxResults=200
 )
 
 response=request.execute()
-with open("response.txt", "w") as fp:
+
+with open("response.txt", "a") as fp:
     json.dump(response, fp)
-
-next_page_token=response["nextPageToken"]
-
-request1=youtube.playlistItems().list(
-    part="snippet,contentDetails",
-    playlistId='PLgUwDviBIf0q8Hkd7bK2Bpryj2xVJk8Vk',
-    maxResults=200,
-    pageToken=next_page_token
-)
-
-response1=request1.execute()
-with open("response1.txt", "w") as fp:
-    json.dump(response1, fp)
-
+    
 ans=[]
 n=len(response["items"])
 for i in range(n):
     ans.append(response["items"][i]['snippet']['title'])
 
-n=len(response1["items"])
+key='nextPageToken'
+while key in response:
+    next_page_token=response["nextPageToken"]
+    request1=youtube.playlistItems().list(
+        part="snippet,contentDetails",
+        playlistId=playlist_id,
+        maxResults=200,
+        pageToken=next_page_token
+    )
+    response=request1.execute()
+    print(response)
+    with open("response.txt", "a") as fp:
+        json.dump(response, fp)
+    response["items"]=response.get("items","null") + response["items"]
+ 
+
+
+
+# next_page_token=response["nextPageToken"]
+# print(next_page_token)
+# request1=youtube.playlistItems().list(
+#     part="snippet,contentDetails",
+#     playlistId='PLgUwDviBIf0q8Hkd7bK2Bpryj2xVJk8Vk',
+#     maxResults=200,
+#     pageToken=next_page_token
+# )
+
+
+# response1=request1.execute()
+# print(response1["nextPageToken"])
+
+# with open("response1.txt", "w") as fp:
+#     json.dump(response1, fp)
+
+n=len(response["items"])
 for i in range(n):
-    ans.append(response1["items"][i]['snippet']['title'])
+    ans.append(response["items"][i]['snippet']['title'])
+
+# n=len(response1["items"])
+# for i in range(n):
+#     ans.append(response1["items"][i]['snippet']['title'])
 
 excelHelper(ans)
 
-@app.route("/") 
-def hello(): 
-    return "Hello, Welcome to GeeksForGeeks"
 
-
-if __name__ == "__main__": 
-    app.run(debug=True) 
